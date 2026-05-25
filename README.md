@@ -1,15 +1,14 @@
-# Fast-DDPM-with-TIWT
+# Fast Diffusion Model for Image Denoising Based on Translation-Invariant Wavelet Transform
 
 
 
-We propose Fast-DDPM-with-TIWT, a simple yet effective approach that improves training speed, sampling speed, and generation quality of diffusion models simultaneously. Fast-DDPM-with-TIWT trains and samples using only 10 time steps, reducing the training time to 0.2x and the sampling time to 0.01x compared to DDPM.
+We propose a fast diffusion model for image denoising based on translation-invariant wavelet transform (TIWT). The method integrates three key components: (1) a TIWT-based feature enhancement module that performs multi-scale non-subsampled decomposition to strengthen the representation of image edges and textures, alleviating detail loss and textural distortion; (2) a non-uniform time-step sampling strategy that concentrates more steps on the most critical noise stages, optimizing the training and inference process; and (3) a spatial-channel attention mechanism (CBAM) embedded in the U-Net skip connections to ensure a more lightweight network structure. Compared with DDPM, the proposed method improves PSNR by 4.81 dB on the LDCT-and-Projection-data dataset, reduces FLOPs from 70.83G to 28.43G, reduces memory consumption from 3.21G to 1.25G, and shortens inference time from 2.47s to 1.71s per image.
 
 <p align="center">
-  <img src="Overview.png" alt="DDPM vs. Fast-DDPM-with-TIWT" width="750">
+  <img src="Overview.png" alt="Overall framework of the proposed method" width="750">
 </p>
 
-The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Zhanfeng Deng
-(2306636146@qq.com).
+The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Zhanfeng Deng (2306636146@qq.com).
 
 ## Requirements
 * Python==3.10.6
@@ -26,7 +25,7 @@ The code is only for research purposes. If you have any questions regarding how 
 * scipy
 * `pip install -r requirements.txt`
 
-## Publicly available Dataset
+## Publicly Available Datasets
 - Prostate-MRI-US-Biopsy dataset
 - LDCT-and-Projection-data dataset
 - BraTS 2018 dataset
@@ -36,7 +35,7 @@ The code is only for research purposes. If you have any questions regarding how 
 ### 1. Git clone or download the codes.
 
 ### 2. Pretrained model weights
-* Model witghts will be aviable soon.
+* Model weights will be available soon.
 
 ### 3. Prepare data
 * Please download our processed dataset or download from the official websites.
@@ -63,25 +62,25 @@ The code is only for research purposes. If you have any questions regarding how 
 
 ```
 
-### 4. Training/Sampling a Fast-DDPM model
+### 4. Training/Sampling the proposed fast diffusion model
 * Please make sure that the hyperparameters such as scheduler type and timesteps are consistent between training and sampling.
-* The total number of time steps is defaulted as 1000 in the paper, so the number of involved time steps for Fast-DDPM should be less than 1000 as an integer.
+* The standard DDPM uses 1000 time steps. The proposed method adopts a non-uniform sampling strategy to reduce the effective number of time steps. According to the paper, the optimal range is 10–50 steps, with 20 steps achieving the best trade-off between denoising quality and computational cost.
 ```
-python fast_ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJECT_PATH} --doc {MODEL_NAME} --scheduler_type {SAMPLING STRATEGY} --timesteps {STEPS}
+python fast_ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJECT_PATH} --doc {MODEL_NAME} --scheduler_type {SAMPLING_STRATEGY} --timesteps {STEPS}
 ```
 ```
-python fast_ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJECT_PATH} --doc {MODEL_NAME} --sample --fid --scheduler_type {SAMPLING STRATEGY} --timesteps {STEPS}
+python fast_ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJECT_PATH} --doc {MODEL_NAME} --sample --fid --scheduler_type {SAMPLING_STRATEGY} --timesteps {STEPS}
 ```
 
 where 
-- `DATASET_NAME` should be selected among `LDFDCT` for image denoising task, `BRATS` for image-to-image translation task and `PMUB` for multi image super-resolution task.
-- `SAMPLING STRATEGY` controls the scheduler sampling strategy proposed in the paper (either uniform or non-uniform).
-- `STEPS` controls how many timesteps used in the training and inference process. It should be an integer less than 1000 for Fast-DDPM, which is 10 by default.
+- `DATASET_NAME` should be selected among `LDFDCT` for image denoising task, `BRATS` for image-to-image translation task, and `PMUB` for multi image super-resolution task.
+- `SAMPLING_STRATEGY` controls the scheduler sampling strategy proposed in the paper: `non-uniform` (the proposed strategy) or `uniform`.
+- `STEPS` controls how many timesteps are used in training and inference. The recommended range is 10–50, with a default of 10.
 
 
-### 5. Training/Sampling a DDPM model
+### 5. Training/Sampling a DDPM baseline
 * Please make sure that the hyperparameters such as scheduler type and timesteps are consistent between training and sampling.
-* The total number of time steps is defaulted as 1000 in the paper, so the number of time steps for DDPM is defaulted as 1000.
+* The standard DDPM uses 1000 time steps as in the original paper.
 ```
 python ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJECT_PATH} --doc {MODEL_NAME} --timesteps {STEPS}
 ```
@@ -90,8 +89,8 @@ python ddpm_main.py --config {DATASET}.yml --dataset {DATASET_NAME} --exp {PROJE
 ```
 
 where 
-- `DATASET_NAME` should be selected among `LDFDCT` for image denoising task, `BRATS` for image-to-image translation task and `PMUB` for multi image super-resolution task.
-- `STEPS` controls how many timesteps used in the training and inference process. It should be 1000 in the setting of this paper.
+- `DATASET_NAME` should be selected among `LDFDCT` for image denoising task, `BRATS` for image-to-image translation task, and `PMUB` for multi image super-resolution task.
+- `STEPS` controls how many timesteps are used in training and inference. It should be 1000 for the standard DDPM setting used in the paper.
 
 
 
