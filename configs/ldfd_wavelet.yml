@@ -1,0 +1,66 @@
+data:
+    dataset: "LDFDCT"
+    train_dataroot: "data/LD_FD_CT_train"
+    val_dataroot: "data/LD_FD_CT_val"
+    sample_dataroot: "data/LD_FD_CT_test"
+    image_size: 256
+    channels: 1
+    logit_transform: false
+    uniform_dequantization: false
+    gaussian_dequantization: false
+    random_flip: true
+    rescaled: true
+    num_workers: 4
+
+model:
+    type: "wavelet_sg"  # 使用小波域去噪模型
+    in_channels: 8      # 小波域输入：4个子带 * 2个输入
+    out_ch: 4          # 小波域输出：4个子带
+    ch: 64             # 减少通道数以节省内存
+    ch_mult: [1, 2, 2, 4]  # 简化架构
+    num_res_blocks: 2
+    attn_resolutions: [16]
+    dropout: 0.1
+    var_type: fixedsmall
+    ema_rate: 0.999
+    ema: True
+    resamp_with_conv: True
+    use_wavelet: True   # 启用小波变换
+
+diffusion:
+    beta_schedule: linear
+    beta_start: 0.0001
+    beta_end: 0.02
+    num_diffusion_timesteps: 1000
+
+training:
+    batch_size: 8       # 适当减少批次大小
+    n_epochs: 10000
+    n_iters: 5000000
+    snapshot_freq: 10000
+    validation_freq: 100000
+    gradient_clip: 1.0
+    weight_decay: 0.01
+
+sampling:
+    batch_size: 2       # 减少采样批次大小
+    ckpt_id: [50000, 100000, 150000, 200000, 250000, 300000, 400000, 500000]
+    last_only: True
+
+sampling_inter:
+    batch_size: 4
+    last_only: True
+
+sampling_fid:
+    batch_size: 4
+    last_only: True
+
+optim:
+    weight_decay: 0.01
+    optimizer: "AdamW"
+    lr: 0.0001
+    beta1: 0.9
+    beta2: 0.999
+    amsgrad: false
+    eps: 0.00000001
+    grad_clip: 1.0

@@ -1,0 +1,298 @@
+import os
+import numpy as np
+import argparse
+from glob import glob
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
+from PIL import Image
+import matplotlib.pyplot as plt
+
+def calculate_psnr(img1, img2, data_range=255):
+    """
+    计算两张图像之间的PSNR值
+    
+    Args:
+        img1: 第一张图像 (numpy array)
+        img2: 第二张图像 (numpy array)
+        data_range: 数据范围，默认255
+    
+    Returns:
+        PSNR值
+    """
+    return psnr(img1, img2, data_range=data_range)
+
+def calculate_ssim(img1, img2, data_range=255):
+    """
+    计算两张图像之间的SSIM值
+    
+    Args:
+        img1: 第一张图像 (numpy array)
+        img2: 第二张图像 (numpy array)
+        data_range: 数据范围，默认255
+    
+    Returns:
+        SSIM值
+    """
+    return ssim(img1, img2, data_range=data_range)
+
+def load_image(image_path):
+    """
+    加载图像文件（不使用OpenCV）
+    
+    Args:
+        image_path: 图像文件路径
+    
+    Returns:
+        图像数组
+    """
+    if image_path.endswith('.npy'):
+        # 加载numpy文件
+        img = np.load(image_path)
+    else:
+        # 使用PIL加载常规图像文件
+        img = Image.open(image_path)
+        if img.mode != 'L':  # 如果不是灰度图，转换为灰度
+            img = img.convert('L')
+        img = np.array(img)
+    
+    return img
+
+def evaluate_dataset(denoised_folder, ground_truth_folder, output_file=None):
+    """
+    评估整个数据集的PSNR和SSIM
+    
+    Args:
+        denoised_folder: 去噪图像文件夹路径
+        ground_truth_folder: 真实图像文件夹路径
+        output_file: 输出结果文件路径（可选）
+    """
+    # 获取所有图像文件
+    denoised_files = sorted(glob(os.path.join(denoised_folder, '*')))
+    gt_files = sorted(glob(os.path.join(ground_truth_folder, '*')))
+    
+    if len(denoised_files) != len(gt_files):
+        print(f"警告: 去噪图像数量({len(denoised_files)})与真实图像数量({len(gt_files)})不匹配")
+        min_len = min(len(denoised_files), len(gt_files))
+        denoised_files = denoised_files[:min_len]
+        gt_files = gt_files[:min_len]
+    
+    psnr_values = []
+    ssim_values = []
+    
+    print("开始评估图像质量...")
+    print("-" * 80)
+    print(f"{'文件名':<30} {'PSNR':<10} {'SSIM':<10}")
+    print("-" * 80)
+    
+    for i, (denoised_file, gt_file) in enumerate(zip(denoised_files, gt_files)):
+        try:
+            # 加载图像
+            denoised_img = load_image(denoised_file)
+            gt_img = load_image(gt_file)
+            
+            # 确保图像尺寸一致
+            if denoised_img.shape != gt_img.shape:
+                print(f"警告: 图像尺寸不匹配 {os.path.basename(denoised_file)}")
+                continue
+            
+            # 归一化到0-255范围
+            if denoised_img.max() <= 1.0:
+                denoised_img = (denoised_img * 255).astype(np.uint8)
+            if gt_img.max() <= 1.0:
+                gt_img = (gt_img * 255).astype(np.uint8)
+            
+            # 计算PSNR和SSIM
+            psnr_val = calculate_psnr(gt_img, denoised_img)
+            ssim_val = calculate_ssim(gt_img, denoised_img)
+            
+            psnr_values.append(psnr_val)
+            ssim_values.append(ssim_val)
+            
+            # 输出单个图像结果
+            filename = os.path.basename(denoised_file)
+            print(f"{filename:<30} {psnr_val:<10.4f} {ssim_val:<10.4f}")
+            
+        except Exception as e:
+            print(f"处理文件 {denoised_file} 时出错: {str(e)}")
+            continue
+    
+    # 计算平均值
+    if psnr_values:
+        avg_psnr = np.mean(psnr_values)
+        avg_ssim = np.mean(ssim_values)
+        std_psnr = np.std(psnr_values)
+        std_ssim = np.std(ssim_values)
+        
+        print("-" * 80)
+        print("评估结果统计:")
+        print(f"总图像数量: {len(psnr_values)}")
+        print(f"平均PSNR: {avg_psnr:.4f} ± {std_psnr:.4f} dB")
+        print(f"平均SSIM: {avg_ssim:.4f} ± {std_ssim:.4f}")
+        print(f"最高PSNR: {max(psnr_values):.4f} dB")
+        print(f"最低PSNR: {min(psnr_values):.4f} dB")
+        print(f"最高SSIM: {max(ssim_values):.4f}")
+        print(f"最低SSIM: {min(ssim_values):.4f}")
+        
+        # 保存结果到文件
+        if output_file:
+            with open(output_file, 'w') as f:
+                f.write("图像质量评估结果\n")
+                f.write("=" * 50 + "\n")
+                f.write(f"总图像数量: {len(psnr_values)}\n")
+                f.write(f"平均PSNR: {avg_psnr:.4f} ± {std_psnr:.4f} dB\n")
+                f.write(f"平均SSIM: {avg_ssim:.4f} ± {std_ssim:.4f}\n")
+                f.write(f"最高PSNR: {max(psnr_values):.4f} dB\n")
+                f.write(f"最低PSNR: {min(psnr_values):.4f} dB\n")
+                f.write(f"最高SSIM: {max(ssim_values):.4f}\n")
+                f.write(f"最低SSIM: {min(ssim_values):.4f}\n")
+                f.write("\n详细结果:\n")
+                f.write("-" * 80 + "\n")
+                f.write(f"{'文件名':<30} {'PSNR':<10} {'SSIM':<10}\n")
+                f.write("-" * 80 + "\n")
+                for i, (denoised_file, psnr_val, ssim_val) in enumerate(zip(denoised_files[:len(psnr_values)], psnr_values, ssim_values)):
+                    filename = os.path.basename(denoised_file)
+                    f.write(f"{filename:<30} {psnr_val:<10.4f} {ssim_val:<10.4f}\n")
+            print(f"\n结果已保存到: {output_file}")
+        
+        return avg_psnr, avg_ssim, psnr_values, ssim_values
+    else:
+        print("没有成功处理任何图像")
+        return None, None, [], []
+
+def evaluate_fast_ddpm_results(result_folder):
+    """
+    专门用于评估Fast-DDPM生成的结果
+    假设结果文件命名格式为: {ckpt_id}_{img_id}_pt.png (预测) 和 {ckpt_id}_{img_id}_gt.png (真实)
+    
+    Args:
+        result_folder: Fast-DDPM结果文件夹路径
+    """
+    # 获取所有预测图像和真实图像
+    pred_files = sorted(glob(os.path.join(result_folder, '*_pt.png')))
+    gt_files = sorted(glob(os.path.join(result_folder, '*_gt.png')))
+    
+    if not pred_files or not gt_files:
+        print("未找到Fast-DDPM格式的结果文件")
+        print("预期文件格式: *_pt.png (预测图像) 和 *_gt.png (真实图像)")
+        return
+    
+    print(f"找到 {len(pred_files)} 个预测图像和 {len(gt_files)} 个真实图像")
+    
+    # 匹配预测图像和真实图像
+    matched_pairs = []
+    for pred_file in pred_files:
+        base_name = os.path.basename(pred_file).replace('_pt.png', '')
+        gt_file = os.path.join(result_folder, f"{base_name}_gt.png")
+        if os.path.exists(gt_file):
+            matched_pairs.append((pred_file, gt_file))
+    
+    if not matched_pairs:
+        print("未找到匹配的预测-真实图像对")
+        return
+    
+    print(f"找到 {len(matched_pairs)} 对匹配的图像")
+    
+    psnr_values = []
+    ssim_values = []
+    
+    print("\n开始评估Fast-DDPM结果...")
+    print("-" * 80)
+    print(f"{'图像ID':<20} {'PSNR':<10} {'SSIM':<10}")
+    print("-" * 80)
+    
+    for pred_file, gt_file in matched_pairs:
+        try:
+            pred_img = load_image(pred_file)
+            gt_img = load_image(gt_file)
+            
+            # 归一化到0-255范围
+            if pred_img.max() <= 1.0:
+                pred_img = (pred_img * 255).astype(np.uint8)
+            if gt_img.max() <= 1.0:
+                gt_img = (gt_img * 255).astype(np.uint8)
+            
+            # 计算指标
+            psnr_val = calculate_psnr(gt_img, pred_img)
+            ssim_val = calculate_ssim(gt_img, pred_img)
+            
+            psnr_values.append(psnr_val)
+            ssim_values.append(ssim_val)
+            
+            # 提取图像ID
+            img_id = os.path.basename(pred_file).replace('_pt.png', '')
+            print(f"{img_id:<20} {psnr_val:<10.4f} {ssim_val:<10.4f}")
+            
+        except Exception as e:
+            print(f"处理文件对 {pred_file}, {gt_file} 时出错: {str(e)}")
+            continue
+    
+    # 输出统计结果
+    if psnr_values:
+        avg_psnr = np.mean(psnr_values)
+        avg_ssim = np.mean(ssim_values)
+        std_psnr = np.std(psnr_values)
+        std_ssim = np.std(ssim_values)
+        
+        print("-" * 80)
+        print("Fast-DDPM评估结果:")
+        print(f"总图像数量: {len(psnr_values)}")
+        print(f"平均PSNR: {avg_psnr:.4f} ± {std_psnr:.4f} dB")
+        print(f"平均SSIM: {avg_ssim:.4f} ± {std_ssim:.4f}")
+        print(f"PSNR范围: {min(psnr_values):.4f} - {max(psnr_values):.4f} dB")
+        print(f"SSIM范围: {min(ssim_values):.4f} - {max(ssim_values):.4f}")
+        
+        return avg_psnr, avg_ssim
+    else:
+        print("没有成功处理任何图像对")
+        return None, None
+
+def main():
+    parser = argparse.ArgumentParser(description='评估去噪图像质量')
+    parser.add_argument('--mode', type=str, choices=['general', 'fast_ddpm'], default='general',
+                       help='评估模式: general(通用) 或 fast_ddpm(Fast-DDPM专用)')
+    parser.add_argument('--denoised', type=str, help='去噪图像文件夹路径')
+    parser.add_argument('--ground_truth', type=str, help='真实图像文件夹路径')
+    parser.add_argument('--result_folder', type=str, help='Fast-DDPM结果文件夹路径')
+    parser.add_argument('--output', type=str, help='输出结果文件路径')
+    
+    args = parser.parse_args()
+    
+    if args.mode == 'fast_ddpm':
+        if not args.result_folder:
+            print("Fast-DDPM模式需要指定 --result_folder 参数")
+            return
+        evaluate_fast_ddpm_results(args.result_folder)
+    else:
+        if not args.denoised or not args.ground_truth:
+            print("通用模式需要指定 --denoised 和 --ground_truth 参数")
+            return
+        evaluate_dataset(args.denoised, args.ground_truth, args.output)
+
+if __name__ == '__main__':
+    # 如果没有命令行参数，提供交互式使用方式
+    import sys
+    if len(sys.argv) == 1:
+        print("PSNR/SSIM图像质量评估工具")
+        print("=" * 50)
+        print("使用方法:")
+        print("1. 通用模式:")
+        print("   python PSNR --mode general --denoised <去噪图像文件夹> --ground_truth <真实图像文件夹> [--output <输出文件>]")
+        print("\n2. Fast-DDPM模式:")
+        print("   python PSNR --mode fast_ddpm --result_folder <结果文件夹>")
+        print("\n3. 交互式使用:")
+        
+        mode = input("请选择模式 (1: 通用, 2: Fast-DDPM): ")
+        
+        if mode == '1':
+            denoised_folder = input("请输入去噪图像文件夹路径: ")
+            gt_folder = input("请输入真实图像文件夹路径: ")
+            output_file = input("请输入输出文件路径 (可选，直接回车跳过): ")
+            output_file = output_file if output_file.strip() else None
+            evaluate_dataset(denoised_folder, gt_folder, output_file)
+        elif mode == '2':
+            result_folder = input("请输入Fast-DDPM结果文件夹路径: ")
+            evaluate_fast_ddpm_results(result_folder)
+        else:
+            print("无效选择")
+    else:
+        main()

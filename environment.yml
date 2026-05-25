@@ -1,0 +1,31 @@
+name: fast-ddpm
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch=2.1.0
+  - torchvision=0.16.0
+  - torchaudio=2.1.0
+  - pytorch-cuda=12.1
+  - numpy=1.24.4
+  - pandas=2.0.3
+  - matplotlib=3.7.3
+  - scikit-image=0.21.0
+  - scipy=1.10.1
+  - pyyaml=6.0.2
+  - tqdm=4.67.1
+  - pillow=9.5.0
+  - simpleitk=2.3.0
+  - medpy=0.4.0
+  - pywavelets=1.4.1
+  - python-lmdb=1.5.1
+  - tensorboard=2.17.1
+  - requests=2.32.3
+  - jinja2=3.1.4
+  - pip
+  - pip:
+      - torchaudio==2.1.0
+      - torchvision==0.16.0
