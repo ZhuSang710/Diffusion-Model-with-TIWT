@@ -1,16 +1,15 @@
-# Fast-DDPM
+# Fast-DDPM-with-TIWT
 
-Official PyTorch implementation of: 
 
-[Fast-DDPM: Fast Denoising Diffusion Probabilistic Models for Medical Image-to-Image Generation](https://ieeexplore.ieee.org/abstract/document/10979336) (JBHI 2025)
 
-We propose Fast-DDPM, a simple yet effective approach that improves training speed, sampling speed, and generation quality of diffusion models simultaneously. Fast-DDPM trains and samples using only 10 time steps, reducing the training time to 0.2x and the sampling time to 0.01x compared to DDPM.
+We propose Fast-DDPM-with-TIWT, a simple yet effective approach that improves training speed, sampling speed, and generation quality of diffusion models simultaneously. Fast-DDPM-with-TIWT trains and samples using only 10 time steps, reducing the training time to 0.2x and the sampling time to 0.01x compared to DDPM.
 
 <p align="center">
-  <img src="Overview.png" alt="DDPM vs. Fast-DDPM" width="750">
+  <img src="Overview.png" alt="DDPM vs. Fast-DDPM-with-TIWT" width="750">
 </p>
 
-The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Hongxu Jiang (hongxu.jiang@medicine.ufl.edu).
+The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Zhanfeng Deng
+(2306636146@qq.com).
 
 ## Requirements
 * Python==3.10.6
@@ -37,9 +36,7 @@ The code is only for research purposes. If you have any questions regarding how 
 ### 1. Git clone or download the codes.
 
 ### 2. Pretrained model weights
-* We provide pretrained model weights for all three tasks, where you can access them here: https://drive.google.com/file/d/1ndS-eLegqwCOUoLT1B-HQiqRQqZUMKVF/view?usp=sharing.
-* Pretrained model weights are also available on [Hugging Face](https://huggingface.co/SebastianJiang/FastDDPM).
-* As shown in ablation study, the defaulted 10 time steps may not be optimal for every task, you're more welcome to train Fast-DDPM model on your dataset using different settings.
+* Model witghts will be aviable soon.
 
 ### 3. Prepare data
 * Please download our processed dataset or download from the official websites.
@@ -97,18 +94,4 @@ where
 - `STEPS` controls how many timesteps used in the training and inference process. It should be 1000 in the setting of this paper.
 
 
-## References
-* The code is mainly adapted from [DDIM](https://github.com/ermongroup/ddim).
 
-
-## Citations
-If you use our code or dataset, please cite our paper as below:
-```bibtex
-@article{jiang2025fast,
-  title={Fast-DDPM: Fast denoising diffusion probabilistic models for medical image-to-image generation},
-  author={Jiang, Hongxu and Imran, Muhammad and Zhang, Teng and Zhou, Yuyin and Liang, Muxuan and Gong, Kuang and Shao, Wei},
-  journal={IEEE Journal of Biomedical and Health Informatics},
-  year={2025},
-  publisher={IEEE}
-}
-```
