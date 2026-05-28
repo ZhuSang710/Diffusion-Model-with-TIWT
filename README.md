@@ -2,13 +2,11 @@
 
 
 
-We propose a fast diffusion model for image denoising based on translation-invariant wavelet transform (TIWT). The method integrates three key components: (1) a TIWT-based feature enhancement module that performs multi-scale non-subsampled decomposition to strengthen the representation of image edges and textures, alleviating detail loss and textural distortion; (2) a non-uniform time-step sampling strategy that concentrates more steps on the most critical noise stages, optimizing the training and inference process; and (3) a spatial-channel attention mechanism (CBAM) embedded in the U-Net skip connections to ensure a more lightweight network structure. Compared with DDPM, the proposed method improves PSNR by 4.81 dB on the LDCT-and-Projection-data dataset, reduces FLOPs from 70.83G to 28.43G, reduces memory consumption from 3.21G to 1.25G, and shortens inference time from 2.47s to 1.71s per image.
+We propose a fast diffusion model for image denoising based on translation-invariant wavelet transform (TIWT). The method integrates three key components: (1) a TIWT-based feature enhancement module that performs multi-scale non-subsampled decomposition to strengthen the representation of image edges and textures, alleviating detail loss and textural distortion; (2) a non-uniform time-step sampling strategy that concentrates more steps on the most critical noise stages, optimizing the training and inference process; and (3) a spatial-channel attention mechanism (CBAM) embedded in the U-Net skip connections to ensure a more lightweight network structure. Compared with DDPM, the proposed method improves the peak signal-to-noise ratio (PSNR) by 1.21% and achieves substantially
+superior detail preservation.
 
-<p align="center">
-  <img src="Overview.png" alt="Overall framework of the proposed method" width="750">
-</p>
 
-The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Zhanfeng Deng (2306636146@qq.com).
+The code is only for research purposes. If you have any questions regarding how to use this code, feel free to contact Dong Ran(15689457582@163.com).
 
 ## Requirements
 * Python==3.10.6
